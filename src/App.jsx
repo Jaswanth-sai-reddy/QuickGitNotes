@@ -4,24 +4,18 @@ import {
   TerminalSquare, 
   GitBranch, 
   Globe, 
-  RotateCcw, 
-  Building2,
+  RotateCcw,
+  Building2, 
   Zap,
   ChevronRight,
   Terminal,
   Info,
   AlertTriangle,
   Menu,
-  Layout,
-  FileText,
-  Search,
-  MoreHorizontal,
-  Clock,
-  Home,
-  Copy
+  ExternalLink
 } from 'lucide-react';
 
-// --- FULL, UNABRIDGED COURSE DATA FROM NOTION ---
+// --- FULL, UNABRIDGED COURSE DATA ---
 const courseData = [
   {
     id: "phase0",
@@ -457,13 +451,13 @@ c4d2e9a HEAD@{1}: commit: Wrote 3 days of amazing code    <-- (The "deleted" cod
 (Release Bch)   ──────────────────┐                 │
                                   ▼                 │
 (Develop Bch)   ─── [ Sprint Start ] ───────────────┴───────────────► (Staging)
-                     \             ▲
+                     \\             ▲
                       ▼           /
 (Feature Bch)          [ Code Bug Fix ] ◄── (Developer Workspace)` },
           { type: 'text', content: "<strong>Strategy B: Trunk-Based Development (The Modern Speedster)</strong><br/>Extreme speed through micro-integrations. Everyone clones one single main branch ('Trunk'). Features are short-lived (1-2 days) and merged directly into the trunk immediately. Best for high-velocity SaaS teams utilizing cloud microservices." },
           { type: 'ascii', content: `[ Trunk-Based DAG Visual ]
 (The Trunk)     ─── [ Commit ] ─── [ Commit ] ─── [ Merge ] ─── [ Commit ] ──► (Continuous Prod)
-                     \                             ▲
+                     \\                             ▲
                       └──► [ Short Feature Bch ] ──┘ (1-2 days max)` },
           { type: 'table',
             headers: ["Feature / Metric", "🐢 GitFlow", "⚡ Trunk-Based Development"],
@@ -558,74 +552,72 @@ PR Approved for Human Review                                            PR Locke
   }
 ];
 
-// --- NOTION UI COMPONENTS & THEME ---
+// --- UI Components ---
 
-// Metadata for the Notion Database/Gallery View
-const phaseMeta = {
-  "phase0": { emoji: "📚", tag: "Concept", color: "bg-blue-500/20 text-blue-400" },
-  "phase1": { emoji: "💻", tag: "Beginner", color: "bg-emerald-500/20 text-emerald-400" },
-  "phase2": { emoji: "🔀", tag: "Intermediate", color: "bg-yellow-500/20 text-yellow-400" },
-  "phase3": { emoji: "🌐", tag: "Intermediate", color: "bg-purple-500/20 text-purple-400" },
-  "phase4": { emoji: "⏪", tag: "Advanced", color: "bg-red-500/20 text-red-400" },
-  "phase5": { emoji: "🏢", tag: "Enterprise", color: "bg-teal-500/20 text-teal-400" },
-  "bonus": { emoji: "⚡", tag: "Bonus", color: "bg-orange-500/20 text-orange-400" },
-};
-
-const NotionCodeBlock = ({ children, language = 'bash' }) => (
-  <div className="my-5 rounded-md bg-[#0F0F0F] border border-[#2F2F2F] overflow-hidden flex flex-col group shadow-sm">
-    <div className="px-4 py-2 text-[11px] uppercase tracking-wider font-semibold text-[#6B6B6B] bg-[#191919] border-b border-[#2F2F2F] flex justify-between items-center">
-      <span>{language}</span>
-      <span className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-1 hover:text-[#EBEBEB]">
-        <Copy size={12} /> Copy
-      </span>
+const TerminalWindow = ({ children }) => (
+  <div className="w-full rounded-lg overflow-hidden bg-slate-900 border border-slate-700 shadow-xl my-4 flex flex-col">
+    <div className="flex items-center px-4 py-2 bg-slate-800 border-b border-slate-700">
+      <div className="flex space-x-2">
+        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+      </div>
+      <div className="mx-auto text-xs text-slate-400 font-mono flex items-center">
+        <Terminal size={12} className="mr-2" /> bash — git
+      </div>
     </div>
-    <div className="p-4 overflow-x-auto text-[13.5px] font-mono text-[#EBEBEB] whitespace-pre leading-relaxed">
+    <div className="p-4 overflow-x-auto text-sm font-mono text-slate-300">
       {children}
     </div>
   </div>
 );
 
-const NotionCallout = ({ icon, children, isWarning }) => (
-  <div className={`flex gap-3 p-4 my-5 rounded-md border text-[15px] leading-relaxed shadow-sm
-    ${isWarning ? 'bg-red-900/10 border-red-900/30 text-red-200' : 'bg-[#252525] border-[#2F2F2F] text-[#EBEBEB]'}`}>
-    <div className="flex-shrink-0 mt-0.5">{icon}</div>
-    <div className="flex-1">{children}</div>
+const AsciiBlock = ({ art }) => (
+  <div className="w-full rounded-lg overflow-hidden bg-slate-950 border border-slate-800 shadow-inner my-4 p-4 overflow-x-auto">
+    <pre className="text-emerald-400 font-mono text-xs md:text-sm leading-relaxed">
+      {art}
+    </pre>
   </div>
 );
 
-// Notion Block Renderer
-const renderNotionBlocks = (blocks) => {
+// Block Renderer
+const renderBlocks = (blocks) => {
   if (!blocks) return null;
   return blocks.map((block, i) => {
     switch (block.type) {
       case 'text':
-        return <p key={i} className="text-[#D4D4D4] text-[15px] leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: block.content }} />;
+        return <p key={i} className="text-slate-300 mb-4 leading-relaxed" dangerouslySetInnerHTML={{ __html: block.content }} />;
       case 'quote':
         return (
-          <blockquote key={i} className="border-l-[3px] border-[#EBEBEB] pl-4 py-1 my-5 text-[#9B9B9B] text-[15px] italic">
+          <blockquote key={i} className="border-l-4 border-blue-500 pl-4 py-2 my-6 text-slate-400 italic bg-slate-900/50 rounded-r-lg">
             {block.content}
           </blockquote>
         );
       case 'alert':
-        return <NotionCallout key={i} icon="⚠️" isWarning={true}>{block.content}</NotionCallout>;
+        return (
+          <div key={i} className="bg-red-900/20 border border-red-800/50 p-4 rounded-lg text-red-300 my-4 flex gap-3 shadow-sm">
+            <AlertTriangle className="flex-shrink-0 mt-0.5" size={18} />
+            <div className="font-medium text-sm md:text-base leading-relaxed">{block.content}</div>
+          </div>
+        );
       case 'ascii':
-        return <NotionCodeBlock key={i} language="architecture">{block.content}</NotionCodeBlock>;
+        return <AsciiBlock key={i} art={block.content} />;
       case 'table':
         return (
-          <div key={i} className="overflow-x-auto my-6">
-            <table className="w-full text-left text-[14px] border-collapse">
-              <thead>
-                <tr className="border-b border-[#2F2F2F]">
+          <div key={i} className="overflow-x-auto rounded-lg border border-slate-800 mt-6 mb-6 shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-900 text-slate-300">
+                <tr>
                   {block.headers.map((h, idx) => (
-                    <th key={idx} className="py-2.5 pr-4 font-medium text-[#9B9B9B] whitespace-nowrap">{h}</th>
+                    <th key={idx} className="px-4 py-3 font-semibold border-b border-slate-800">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#2F2F2F]">
+              <tbody className="divide-y divide-slate-800/50 bg-slate-900/30">
                 {block.rows.map((row, rIdx) => (
-                  <tr key={rIdx} className="hover:bg-[#202020] transition-colors">
+                  <tr key={rIdx} className="hover:bg-slate-800/50 transition-colors">
                     {row.map((cell, cIdx) => (
-                      <td key={cIdx} className={`py-3 pr-4 text-[#EBEBEB] align-top ${cIdx === 0 ? 'font-medium' : 'leading-relaxed'}`}>
+                      <td key={cIdx} className={`px-4 py-3 text-slate-300 align-top ${cIdx === 0 ? 'font-mono text-emerald-400 whitespace-nowrap' : 'leading-relaxed'}`}>
                         {cell}
                       </td>
                     ))}
@@ -637,16 +629,21 @@ const renderNotionBlocks = (blocks) => {
         );
       case 'commands':
         return (
-          <NotionCodeBlock key={i} language="terminal">
-            {block.commands.map((cmd, idx) => (
-              <div key={idx} className="flex flex-col mb-3 last:mb-0">
-                <span className="text-[#9B9B9B] text-xs font-sans mb-1"># {cmd.desc}</span>
-                <span className="text-emerald-400 flex items-center gap-2">
-                  <span className="text-[#6B6B6B]">$</span> {cmd.cmd}
-                </span>
-              </div>
-            ))}
-          </NotionCodeBlock>
+          <TerminalWindow key={i}>
+            <div className="space-y-4">
+              {block.commands.map((cmd, idx) => (
+                <div key={idx} className="flex flex-col md:flex-row md:items-start gap-1 md:gap-6">
+                  <div className="flex-shrink-0 text-emerald-400">
+                    <span className="text-slate-500 mr-2">$</span>
+                    {cmd.cmd}
+                  </div>
+                  <div className="text-slate-400 text-xs md:text-sm mt-1 md:mt-0 leading-relaxed">
+                    # {cmd.desc}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TerminalWindow>
         );
       default:
         return null;
@@ -655,62 +652,44 @@ const renderNotionBlocks = (blocks) => {
 };
 
 export default function GitMasterclass() {
-  // 'board' shows the Notion Gallery, otherwise it shows the specific phase ID
-  const [activeView, setActiveView] = useState('board');
+  const [activePhase, setActivePhase] = useState(courseData[0].id);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const activeData = activeView !== 'board' ? courseData.find(p => p.id === activeView) : null;
+  const activeData = courseData.find(p => p.id === activePhase);
 
   return (
-    <div className="h-screen w-full bg-[#191919] text-[#EBEBEB] flex font-sans selection:bg-blue-500/30 text-left overflow-hidden">
+    <div className="h-screen w-full bg-slate-950 text-slate-200 flex font-sans selection:bg-blue-500/30 text-left overflow-hidden">
       
-      {/* --- NOTION SIDEBAR --- */}
-      <div className={`h-full bg-[#202020] flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden border-r border-[#2F2F2F] ${isSidebarOpen ? 'w-full md:w-64' : 'w-0 border-none'}`}>
-        <div className="w-full md:w-64 h-full flex flex-col min-w-[16rem]">
-          
-          {/* Workspace Switcher Area */}
-          <div className="px-4 py-3 border-b border-[#2F2F2F] flex items-center justify-between hover:bg-[#2C2C2C] cursor-pointer transition-colors">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">G</div>
-              <span className="font-semibold text-[14px] truncate text-[#EBEBEB]">Git Workspace</span>
-            </div>
-            <MoreHorizontal size={16} className="text-[#9B9B9B]" />
-          </div>
-
-          {/* Quick Actions */}
-          <div className="px-2 py-3 space-y-0.5 border-b border-[#2F2F2F]">
-            <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#2C2C2C] text-[#9B9B9B] transition-colors text-[14px]">
-              <Search size={16} /> <span>Search</span>
-            </button>
-            <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#2C2C2C] text-[#9B9B9B] transition-colors text-[14px]">
-              <Clock size={16} /> <span>Updates</span>
-            </button>
+      {/* Sidebar - Dynamic and responsive! */}
+      <div className={`h-full bg-slate-900 flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden ${isSidebarOpen ? 'w-full md:w-72 border-r border-slate-800' : 'w-0'}`}>
+        <div className="w-full md:w-72 h-full flex flex-col min-w-[18rem]">
+          <div className="p-6 border-b border-slate-800">
+            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+              <GitBranch className="text-blue-500" /> Git Masterclass
+            </h1>
+            <p className="text-xs text-slate-400 mt-2">The Deep System Architecture</p>
           </div>
           
-          {/* Pages List */}
-          <div className="flex-1 overflow-y-auto px-2 py-4">
-            <div className="px-2 mb-1 text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wider">Private</div>
-            
-            <button 
-              onClick={() => { setActiveView('board'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors text-[14px] mb-1
-                ${activeView === 'board' ? 'bg-[#2C2C2C] text-[#EBEBEB] font-medium' : 'text-[#9B9B9B] hover:bg-[#2C2C2C] hover:text-[#EBEBEB]'}`}
-            >
-              <Layout size={16} className={activeView === 'board' ? "text-blue-400" : ""} /> 
-              <span>Roadmap (Gallery)</span>
-            </button>
-
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {courseData.map((phase) => {
-              const isActive = activeView === phase.id;
+              const Icon = phase.icon;
+              const isActive = activePhase === phase.id;
               return (
                 <button
                   key={phase.id}
-                  onClick={() => { setActiveView(phase.id); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors text-[14px]
-                    ${isActive ? 'bg-[#2C2C2C] text-[#EBEBEB] font-medium' : 'text-[#9B9B9B] hover:bg-[#2C2C2C] hover:text-[#EBEBEB]'}`}
+                  onClick={() => {
+                    setActivePhase(phase.id);
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
+                  className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm' 
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  }`}
                 >
-                  <FileText size={16} className={isActive ? "text-blue-400" : ""} />
-                  <span className="truncate">{phase.title.split(':')[0]}</span>
+                  <Icon size={18} className={isActive ? "text-blue-400" : "text-slate-500"} />
+                  <span className="text-sm font-medium leading-tight">{phase.title}</span>
+                  {isActive && <ChevronRight size={16} className="ml-auto" />}
                 </button>
               )
             })}
@@ -718,122 +697,77 @@ export default function GitMasterclass() {
         </div>
       </div>
 
-      {/* --- NOTION MAIN CONTENT AREA --- */}
-      <div className="flex-1 h-full overflow-y-auto bg-[#191919] relative flex flex-col">
+      {/* Main Content Area */}
+      <div className="flex-1 h-full overflow-y-auto bg-slate-950 relative">
         
-        {/* Top Navigation Bar */}
-        <div className="sticky top-0 z-20 px-4 h-12 bg-[#191919] flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[14px] text-[#9B9B9B]">
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-1 rounded hover:bg-[#2C2C2C] transition-colors"
-              title="Toggle Sidebar"
-            >
-              <Menu size={18} />
-            </button>
-            
-            {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 ml-2 cursor-pointer hover:bg-[#2C2C2C] px-2 py-1 rounded transition-colors" onClick={() => setActiveView('board')}>
-              <Home size={14} /> <span className="truncate">Git Workspace</span>
-            </div>
-            {activeView !== 'board' && (
-              <>
-                <span className="text-[#4B4B4B]">/</span>
-                <div className="flex items-center gap-1.5 cursor-pointer hover:bg-[#2C2C2C] px-2 py-1 rounded transition-colors truncate">
-                  <span>{phaseMeta[activeView].emoji}</span>
-                  <span className="truncate text-[#EBEBEB]">{activeData?.title.split(':')[0]}</span>
-                </div>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-[#9B9B9B]">
-            <button className="text-[13px] font-medium hover:bg-[#2C2C2C] px-2 py-1 rounded transition-colors">Share</button>
-            <button className="p-1 rounded hover:bg-[#2C2C2C] transition-colors"><MoreHorizontal size={18} /></button>
-          </div>
-        </div>
-
-        {/* Dynamic Content: Gallery vs Page */}
-        <div className="flex-1 w-full max-w-4xl mx-auto px-6 md:px-12 lg:px-24 pb-24">
-          
-          {activeView === 'board' ? (
-            /* --- GALLERY VIEW (NOTION DATABASE) --- */
-            <div className="pt-12 animate-in fade-in duration-300">
-              <div className="text-6xl mb-6">🗺️</div>
-              <h1 className="text-4xl font-bold text-[#EBEBEB] mb-4 tracking-tight">Git & GitHub Mastery Roadmap</h1>
-              <p className="text-[#9B9B9B] text-[15px] mb-8 border-b border-[#2F2F2F] pb-8">
-                A complete, end-to-end database of version control mechanics. Select a module below to begin.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {courseData.map(phase => (
-                  <div 
-                    key={phase.id} 
-                    onClick={() => setActiveView(phase.id)} 
-                    className="group cursor-pointer rounded-lg border border-[#2F2F2F] bg-[#191919] overflow-hidden hover:bg-[#202020] transition-colors flex flex-col h-[280px] shadow-sm"
-                  >
-                    <div className="h-[45%] bg-[#252525] border-b border-[#2F2F2F] flex items-center justify-center text-5xl">
-                      {phaseMeta[phase.id].emoji}
-                    </div>
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="font-semibold text-[#EBEBEB] text-[15px] mb-1.5 leading-tight">{phase.title}</h3>
-                      <p className="text-[#9B9B9B] text-[13px] line-clamp-2 leading-relaxed mb-3">{phase.overview}</p>
-                      
-                      {/* Database Properties */}
-                      <div className="mt-auto flex items-center gap-2">
-                        <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded-sm ${phaseMeta[phase.id].color}`}>
-                          {phaseMeta[phase.id].tag}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* --- PAGE VIEW (NOTION DOCUMENT) --- */
-            <div className="pt-12 animate-in slide-in-from-bottom-4 fade-in duration-300">
-              
-              {/* Page Header & Properties */}
-              <div className="mb-10">
-                <div className="text-7xl mb-6">{phaseMeta[activeData.id].emoji}</div>
-                <h1 className="text-4xl font-bold text-[#EBEBEB] mb-8 tracking-tight leading-tight">
-                  {activeData.title}
-                </h1>
-                
-                {/* Notion Style Properties Table */}
-                <div className="flex flex-col gap-3 border-b border-[#2F2F2F] pb-8 mb-8">
-                  <div className="flex items-center text-[14px]">
-                    <div className="w-32 text-[#9B9B9B] flex items-center gap-2"><Clock size={16}/> Status</div>
-                    <div className="text-[#EBEBEB] hover:bg-[#252525] px-2 py-0.5 rounded cursor-pointer transition-colors">Done</div>
-                  </div>
-                  <div className="flex items-center text-[14px]">
-                    <div className="w-32 text-[#9B9B9B] flex items-center gap-2"><Layout size={16}/> Tag</div>
-                    <div className={`px-2 py-0.5 rounded text-[12px] font-medium ${phaseMeta[activeData.id].color}`}>
-                      {phaseMeta[activeData.id].tag}
-                    </div>
-                  </div>
-                </div>
-
-                <NotionCallout icon="💡">
-                  {activeData.overview}
-                </NotionCallout>
-              </div>
-
-              {/* Page Content / Blocks */}
-              <div className="space-y-2">
-                {activeData.sections.map((section, idx) => (
-                  <div key={idx} className="relative mt-10 mb-6">
-                    <h2 className="text-2xl font-bold text-[#EBEBEB] mb-4 pb-2">
-                      {section.title}
-                    </h2>
-                    
-                    {/* Render Notion-styled blocks */}
-                    {renderNotionBlocks(section.blocks)}
-                  </div>
-                ))}
-              </div>
+        {/* Top Navigation Bar with the Hamburger Menu */}
+        <div className="sticky top-0 z-20 px-6 py-4 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/50 flex items-center gap-4">
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-colors border border-slate-700"
+            title="Toggle Sidebar"
+          >
+            <Menu size={20} />
+          </button>
+          {!isSidebarOpen && (
+            <div className="font-semibold text-slate-200 flex items-center gap-2">
+              <GitBranch size={16} className="text-blue-500" /> Git Masterclass
             </div>
           )}
+        </div>
+
+        <div className="max-w-4xl mx-auto p-6 md:p-10 pt-6">
+          
+          {/* --- NOTION LINK BANNER --- */}
+          <a 
+            href="https://tinyurl.com/quicknotesgit" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 mb-8 bg-blue-900/20 border border-blue-800/50 rounded-xl hover:bg-blue-900/30 transition-colors group cursor-pointer"
+          >
+            <div className="flex items-center gap-3 text-blue-300 mb-2 sm:mb-0">
+              <BookOpen size={20} className="text-blue-400 flex-shrink-0" />
+              <span className="font-medium text-sm md:text-base">For full notes, refer to this Notion page</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-blue-400 font-semibold text-sm group-hover:text-blue-300 transition-colors">
+              View Notion Docs <ExternalLink size={16} />
+            </div>
+          </a>
+
+          {/* Header */}
+          <div className="mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 text-blue-400 text-xs font-semibold mb-4 border border-blue-800/50">
+              <activeData.icon size={14} /> 
+              {activeData.title.split(':')[0]}
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
+              {activeData.title.split(':')[1]?.trim() || activeData.title}
+            </h2>
+            <div className="bg-slate-900 border-l-4 border-blue-500 p-4 rounded-r-lg">
+              <p className="text-slate-300 leading-relaxed flex gap-3">
+                <Info className="flex-shrink-0 text-blue-400 mt-1" size={18} />
+                {activeData.overview}
+              </p>
+            </div>
+          </div>
+
+          {/* Sections */}
+          <div className="space-y-12 pb-12">
+            {activeData.sections.map((section, idx) => (
+              <div key={idx} className="relative">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-sm text-slate-400 border border-slate-700">
+                    {idx + 1}
+                  </span>
+                  {section.title}
+                </h3>
+                
+                {/* Dynamically Render all stacked blocks for this section */}
+                {renderBlocks(section.blocks)}
+                
+              </div>
+            ))}
+          </div>
           
         </div>
       </div>
